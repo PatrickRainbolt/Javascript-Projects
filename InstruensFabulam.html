@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Instruens Fabulam</title>
+
+    <style>
+      .boxes {display: grid;grid-column-gap: 20px;grid-template-columns: 40% 60%;background-color: #fff;color: #444;width: 95%;height: 100%;}
+      .title {text-align: center;font-style: bold;}
+      .forms {background-color: #666;color: #fff;border-radius: 5px;padding: 20px;font-size: 150%;width: 95%;height: 100%;}
+      .forms .TableInfo {width: 95%;}
+      textarea {font-family: "Courier New", Courier;width: 100%;height: 75%;}
+      .tables {background-color: #444;color: #fff;border-radius: 5px;padding: 20px;font-size: 100%;font-family: "Courier New", Courier;width:100%;height: 100%;}
+    </style>
+
+    <script>
+      // Instruens Fabulam means drawing a chart (or table) in Latin.
+      //
+      // The input consists of one or more table descriptions, followed by a line
+      //   whose first character is '*', which signals the end of the file. Each
+      //   description begins with a header line containing one or more characters
+      //   that define the number and alignment of columns in the table. Each
+      //   character in the header line is either '<', '=', or '>', and indicates
+      //   a left-justified, centered, or right-justified column. Following the
+      //   header are at least two and at most 21 data lines that contain the
+      //   entries for each row. Each data line consists of one or more nonempty
+      //   entries separated by an ampersand ('&'), where the number of entries
+      //   is equal to the number of columns defined in the header line. The first
+      //   data line contains entries for the column titles, and the remaining data
+      //   lines contain entries for the body of the table. Spaces may appear within
+      //   an entry, but never at the beginning or end of an entry. The characters
+      //   '<', '=', '>', '&', and '*' will not appear in the input except where
+      //   indicated above.
+
+
+      // Toggle to view Debug information. By default it is 'false' to hide messages.
+      var OutDEBUG = false;
+
+      // Toggle to center justify the Column Headers. By deafule it is 'false' to
+      //     follow the set Column Justification.
+      var ColumnHeaderCenter = false;
+
+      // Toggle to allow Toggle Debug to refresh screen if output exist.
+      var DataOutput = false;
+
+      // Varible to hold Output innerHTML data for output '<DIV>'.
+      var OutDIV = "";
+
+      // Array to hold current table Justification format information.
+      var OutColJust = [];
+
+      // Array to hold current table largest row variable width per column.
+      //     This is needed to set maximum column width for the whole Column.
+      var OutColLen = [];
+
+      // Array to hold curren table rows '-' divider per column.
+      var OutColPad = [];
+
+      // Array to hold current table cell data for building the Tables.
+      var OutTable = [];
+
+      // This function toggles Debug mode on and off via the 'Toggle Debug' form button.
+      function ToggleDebug() {
+        if (OutDEBUG) {OutDEBUG = false;}else{OutDEBUG=true;}
+        // Rebuilds the table output with or without the Debug information.
+        if (DataOutput) {CreateTables();}
+      }
+
+      // This function toggles the Header Column Justification to Center or
+      //     follow Column Formating.
+      function ToggleTitleCenter() {
+        if (ColumnHeaderCenter) {ColumnHeaderCenter = false;}else{ColumnHeaderCenter=true;}
+        // Rebuilds the table output with or without the Debug information.
+        CreateTables();
+      }
+
+      function ClearDIV() {
+        // Toggle DIV Results output as empty.
+        DataOutput = false;
+        // Reset the DIV Results output to empty.
+        document.getElementById("output").innerHTML = "Ready!";
+      }
+
+      // This Function builds the output data to be written into the Result DIV.
+      function outdata(indata, token) {
+        // If the token is 'debug' it only concatinates to the 'OutDIV' if
+        //     'OutDEBUG' is toggled 'true'
+        if (token == "debug") {
+          if(OutDEBUG){OutDIV += indata;}
+        } else {OutDIV += indata;}
+      }
+
+      // This Function removes unwated Character and extra spaces from the indata.
+      function CleanInput(indata) {
+        indata = indata.replace(/[^a-zA-Z0-9 />/=/</&/"/'/?/./,/*]/, "");
+        return indata.replace(/\s+/g,' ').trim();
+      }
+
+      // This function take the Row indata and splits on '&' then places the
+      //      spilt data into a array.
+      function ParseInput(indata, rows) {
+        var columns = indata.split('&');
+        // This for loop checks each Column with the 'OutColLen' array to get the
+        //     largest width per Column.
+        for(var ic = 0;ic < columns.length;ic++){
+          if (columns[ic].length > OutColLen[ic]) {
+            OutColLen[ic] = columns[ic].length;
+          }
+          OutTable[rows][ic] = columns[ic];
+          outdata("-[" + OutTable[rows][ic] + "=" + OutTable[rows][ic].length + "]",'debug');
+        }
+      }
+
+      // This Function return 'true' if the current row has only a Justification symbol.
+      function isJustify(indata) {
+        if(indata.match(/^[/>/=/<]+$/)) {return true;} else {return false;}
+      }
+
+      // This Function return 'true' if the current row is the End of File marker.
+      function isEOF(indata) {
+        if(indata == "*") {return true;} else {return false;}
+      }
+
+      // This Function creates the top and bottom Table Lines.
+      function PrintTopBottom() {
+        var TBout = '@';
+        for(var coltb = 0;coltb < OutColLen.length;coltb++) {
+          TBout += "-" + OutColPad[coltb] + "-";
+          if(coltb < (OutColLen.length - 1)) {TBout += "-";}
+        }
+        TBout += '@<br>';
+        return TBout;
+      }
+
+      // This function creates tje Header and Body Seperator Line.
+      function PrintSeperator() {
+        var TBout = '|';
+        for(var coltb = 0;coltb < OutColLen.length;coltb++) {
+          TBout += "-" + OutColPad[coltb] + "-";
+          if(coltb < (OutColLen.length - 1)) {TBout += "+";}
+        }
+        TBout += '|<br>';
+        return TBout;
+      }
+
+      // This Function converts the input data in Left, Right and Center
+      //     Justified using the 'RepeatCHR' variable. I replaced the space with
+      //     the '&nbsp;' or none breakable space, so that the multiple spaces
+      //     would display on a browser.
+      function PrintJustify(indata, inwidth, intype) {
+        var RepeatCHR = "&nbsp;";
+        var JustOut = "";
+        var LeftMargin = 0;
+        var RightMargin = 0;
+
+        // When 'intype' is set to '<' we Left justify the 'indata'
+        if(intype == "<") {
+          LeftMargin = inwidth - indata.length;
+          JustOut = indata + RepeatCHR.repeat(LeftMargin);
+
+        // When 'intype' is set to '>' we Right justify the 'indata'
+        } else if (intype == ">") {
+          RightMargin = inwidth - indata.length;
+          JustOut = RepeatCHR.repeat(RightMargin) + indata;
+
+        // When 'intype' is set to '=' we Center justify the 'indata'
+        } else {
+          LeftMargin = Math.floor((inwidth - indata.length) / 2);
+          RightMargin = inwidth - (LeftMargin + indata.length);
+          JustOut = RepeatCHR.repeat(LeftMargin) + indata + RepeatCHR.repeat(RightMargin);
+        }
+        // Returning Justified output with a formated space on each side.
+        return " " + JustOut + " ";
+      }
+
+      // This function takes the compiled data and outputs the Formated Table.
+      function PrintTables() {
+        // The section is for Debugging purposes and shows the Column Widths.
+        if(OutDEBUG) {
+          outdata("&nbsp;[CL]-[" + OutColLen.length + "]",'debug');
+          for(var col = 0;col < OutColLen.length;col++) {
+            outdata("-[" + OutColLen[col] + "]",'debug');
+          }
+          outdata("<br>&nbsp;" + '-'.repeat(60) +"Debuging Off--<br><br>",'debug');
+        }
+
+        // This section does two functions, it gets the Total Column width for the
+        //     table and Creates the '-' padded section for the Top, Bottom
+        //     and Seperator lines.
+        var TotColLen = 0;
+        for(var col = 0;col < OutColLen.length;col++) {
+          TotColLen = TotColLen + OutColLen[col];
+          OutColPad[col] = "-".repeat(OutColLen[col]);
+        }
+
+        // Calling the Function that adds the Top and Bottom Lines.
+        outdata(PrintTopBottom());
+
+        // Parsing 'OutTable' to create the formatted Table.
+        for(var ptrow = 1;ptrow < OutTable.length;ptrow++) {
+          // Starting off with the Left '|' margin marker.
+          var tmpOUTpt = "| ";
+          // Parsing each Column
+          for(var ptcol = 0;ptcol < OutTable[ptrow].length;ptcol++) {
+            // This check for the Column Header Data and if the 'ColumnHeaderCenter'
+            //     toggle is set to 'true'.
+            if (ColumnHeaderCenter && ptrow == 1) {
+              // Sending data to 'PrintJustify' to format the output as Center Justified.
+              tmpOUTpt += PrintJustify(OutTable[ptrow][ptcol], OutColLen[ptcol], "=") + "|";
+            } else {
+              // Sending data to 'PrintJustify' to format the output as assigned.
+              tmpOUTpt += PrintJustify(OutTable[ptrow][ptcol], OutColLen[ptcol], OutColJust[ptcol]) + "|";
+            }
+          }
+          outdata(tmpOUTpt + "<br>");
+          // Calling the Header and Data Seperator Line.
+          if(ptrow == 1) {outdata(PrintSeperator());}
+        }
+        outdata(PrintTopBottom() + "<br>");
+
+        // Set the Current Table Arrays to Empty so they can be used for the next table.
+        OutColJust.length = 0;
+        OutColLen.length = 0;
+        OutTable.length = 0;
+      }
+
+      // Main Function that is called to process the Form Data.
+      function CreateTables() {
+        // Toggle to show there is output to the DIV Results.
+        DataOutput = true;
+        // Points to the Form TextArea Input area.
+        var textArea = document.getElementById('TableArea').value;
+        // Splits the Input into rows of input data.
+        var lines = textArea.split('\n');
+        // Toggles to 'true' once the first Justification Line is found.
+        var FndJustify = false;
+        // Each table has individual set of rows pointing at the 'OutTable' array.
+        var CurRows = 0;
+        // Sets the DIV output to Empty.
+        OutDIV = "";
+
+        // Loops through all of the Input Rows to create the tables.
+        for(var i = 0;i < lines.length;i++){
+          // Determines if this row is Justification data.
+          if(isJustify(lines[i])) {
+            // Determines if past the first Justification data and if 'true',
+            //     pause to build the formatted table.
+            if(FndJustify) {PrintTables();CurRows = 0} else {FndJustify = true;}
+          }
+          // The section is for Debugging purposes and shows the Current Input Line.
+          if(CurRows == 0) {outdata('&nbsp;' + '-'.repeat(60) +"Debuging On---<br>",'debug');}
+          if(CurRows < 10) {outdata("&nbsp;[0" + CurRows + "]",'debug');}
+           else {outdata(" [" + CurRows + "]",'debug');}
+
+          // Determines line is a Justification line and Creates the
+          //     Justification Column array.
+          if(isJustify(lines[i])) {
+            outdata("-[" + lines[i].length + "]",'debug');
+            for(var c = 0;c < lines[i].length;c++) {
+              OutColJust[c] = lines[i].charAt(c);
+              if(OutColJust[c] == "<") {outdata("-[Left]",'debug');}
+                else if(OutColJust[c] == "=") {outdata("-[Center]",'debug');}
+                else {outdata("-[Right]",'debug');}
+              OutColLen[c] = 0;
+            }
+          // Checks if Input Line is Enf of File and builds the last formatted table.
+          } else if(isEOF(lines[i])) {
+            outdata("-[E]<br>",'debug');
+            PrintTables();
+          } else {
+            outdata("-[ ]",'debug');
+
+            if(!isEOF(lines[i])) {
+              // Determines if a nested Column array is Created and if not Creates one.
+              if (!OutTable[CurRows]) {OutTable[CurRows] = [];}
+              // Calls the 'ParseInuput' function.
+              ParseInput(CleanInput(lines[i]), CurRows);
+            }
+          }
+          outdata("<br>",'debug');
+          // Incriments the Current Table Rows by one.
+          CurRows++;
+        }
+        // All Input data has been Read, Writing data to DIV Output.
+        document.getElementById("output").innerHTML = OutDIV;
+      }
+    </script>
+
+  </head>
+  <body>
+    <section class='boxes'>
+      <div class='title'>Instruens Fabulam Data</div>
+      <div class='title'>Instruens Fabulam Results</div>
+      <div class='forms'>
+        <form id="InstruensFabulam" action="#">
+          <textarea name="TableInfo" id="TableArea" value="" rows="40"><>=>
+TITLE&VERSION&OPERATING SYSTEM&PRICE
+Slug Farm&2.0&FreeBSD&49.99
+Figs of Doom&1.7&Linux&9.98
+Smiley Goes to Happy Town&11.0&Windows&129.25
+Wheelbarrow Motocross&1.0&BeOS&34.97
+>
+What is the answer?
+42
+<>
+Tweedledum&Tweedledee
+"Knock, knock."&"Who's there?"
+"Boo."&"Boo who?"
+"Don't cry, it's only me."&(groan)
+*</textarea><br><br>
+          <center>
+            <input type="button" onclick="CreateTables()" value="Process Instruens Fabulam Data">
+            <input type="button" onclick="ToggleDebug()" value="Toggle Debug">
+            <input type="button" onclick="ToggleTitleCenter()" value="Toggle Tiles Centered">
+            <input type="button" onclick="ClearDIV()" value="Clear Results">
+          </center>
+        </form>
+      </div>
+      <div class='tables' id='output'>
+        Ready!
+      <div>
+  </body>
+</html>
