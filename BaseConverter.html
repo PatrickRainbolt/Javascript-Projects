@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Base Converter</title>
+
+    <style>
+      select {background-color: #999;color: #fff;font-family: "Courier New", Courier;font-size: 25px;}
+       input {background-color: #999;color: #fff;font-family: "Courier New", Courier;font-size: 25px;}
+       .BaseConvert {font-size: 25px;}
+       .OutBase {font-family: "Courier New", Courier;display: grid;grid-template-columns: 0.2fr 0.8fr;grid-gap: 20px;}
+       .right {text-align: right;}
+       span {background-color: #eee;margin_left: 20px;padding: 5px;}
+    </style>
+
+    <script>
+      // Function to Convert numbers from one Base to Another.
+      function ConvertBase(indata, fromBase, toBase) {
+        // Command that converts the number to the new base.
+        var outbase = parseInt(indata, fromBase).toString(toBase);
+        // Determines if Binary or base 2 and formats the output.
+        if(toBase == 2) {
+            // Adds Leading Zeros to data to match formatting.
+            if((outbase.length % 8) != 0) {outbase = "0".repeat(8 - (outbase.length % 8)) + outbase;}
+            // Returns data with eight characters seperated by a space.
+            return outbase.replace(/\B(?=(\d{8})+(?!\d))/g," ");
+        // Determines if Decimal or base 10 and formats the output.
+
+        } else if(toBase == 10) {
+            // Returns data with comma seperated values.
+            return outbase.replace(/\B(?=(\d{3})+(?!\d))/g,",");
+
+        // Determines if Hexadecimal or base 16 and formats the output.
+        } else if(toBase == 16) {
+            // Adds Leading Zeros to data to match formatting.
+            if((outbase.length % 4) != 0) {outbase = "0".repeat(4 - (outbase.length % 4)) + outbase;}
+            // Returns data with four characters seperated by a space.
+            return outbase.replace(/\B(?=(\w{4})+(?!\w))/g," ");
+        } else {
+            // Returns all other Bases with no formatting.
+            return outbase;
+        }
+      }
+
+      // Function to start the conversion script.
+      function Convert() {
+        // Input value to convert.
+        var baseValue = document.getElementById("toConvert").value;
+        // Input value of the Inpue Base
+        var base = document.getElementById("inBase").value;
+
+        // Converts the Input Value to Base 2 through 16.
+        for(var i = 2; i < 17; i++) {
+          // Checks that Base is below Base 11 and is Numeric. Base 11 to 16 Can
+          //    contain the letter 'A' through 'F'.
+          if(base < 11 && isNaN(baseValue)) {
+            document.getElementById("Base"+i).innerHTML = "Invalid Value for Selected Base";
+          } else {
+            // Update Base SPAN to contain the new output value.
+            document.getElementById("Base"+i).innerHTML = ConvertBase(baseValue, base, i).toUpperCase();
+          }
+        }
+      }
+    </script>
+
+  </head>
+  <body>
+    <br>
+    <div class="BaseConvert">
+      Current Base: <select class="inBase" name="inBase" id="inBase">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10" selected>10</option>
+        <option value="11">11</option>
+        <option value="12">12</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="15">15</option>
+        <option value="16">16</option>
+      </select>
+      &nbsp;&nbsp;
+      Number: <input type="text" id="toConvert">
+      &nbsp;&nbsp;
+      <input type="button" onclick="Convert()" value="Convert">
+      <br><br>
+    </div>
+    <div class="OutBase">
+      <span class="right">[Binary] Base &nbsp;2:</span><span ID="Base2">Ready!</span>
+      <span class="right">Base &nbsp;3:</span><span ID="Base3">Ready!</span>
+      <span class="right">Base &nbsp;4:</span><span ID="Base4">Ready!</span>
+      <span class="right">Base &nbsp;5:</span><span ID="Base5">Ready!</span>
+      <span class="right">Base &nbsp;6:</span><span ID="Base6">Ready!</span>
+      <span class="right">Base &nbsp;7:</span><span ID="Base7">Ready!</span>
+      <span class="right">[Octal] Base &nbsp;8:</span><span ID="Base8">Ready!</span>
+      <span class="right">Base &nbsp;9:</span><span ID="Base9">Ready!</span>
+      <span class="right">[Decimal] Base 10:</span><span ID="Base10">Ready!</span>
+      <span class="right">Base 11:</span><span ID="Base11">Ready!</span>
+      <span class="right">Base 12:</span><span ID="Base12">Ready!</span>
+      <span class="right">Base 13:</span><span ID="Base13">Ready!</span>
+      <span class="right">Base 14:</span><span ID="Base14">Ready!</span>
+      <span class="right">Base 15:</span><span ID="Base15">Ready!</span>
+      <span class="right">[Hexadecimal] Base 16:</span><span ID="Base16">Ready!</span>
+    </div>
+  </body>
+</html>
