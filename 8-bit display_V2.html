@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>test</title>
+    <style>
+      :root {
+        --pixeldefaultcolor: #CCC;    /* Default Screen Background Color              */
+        --pixelsize: 1px;             /* Default pixel Screen Size                    */
+        --pixelcols: 40;              /* Default Screen number of Columns             */
+        --pixelrows: 24;              /* Default Screen number of Rows                */
+        --pixelrepeat: 1;             /* Reset by Javascript to match Default Columns */
+      }
+
+      /* Page container                                                               */
+      .container {
+        margin: 10px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      /* CSS Class defining the Pixel Container                                       */
+      .PixelsOut {
+        background-color: var(--pixeldefaultcolor);
+        color: #000;
+        margin: 3px;
+        padding: 5px;
+        width: 960px;
+        height: auto;
+        display: grid;
+        /* '--pixelrepeat' is controlled via javascript. Please do not change.        */
+        grid-template-columns: repeat(var(--pixelrepeat), auto);
+      }
+
+      /* CSS Class defining each Pixel Container                                      */
+      .pixels {
+        padding: 0.5px;
+        margin: 0px;
+        background-color: var(--pixeldefaultcolor);
+        border: 0 solid #FFF;
+        width: var(--pixelsize);
+        height: var(--pixelsize);
+      }
+    </style>
+
+
+    <script>
+      // Partial ASCII table, from 32 to 126, in 8x8 Bitmat Format.
+      var ascii = [
+        [0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00],  // ASCII Character [ SPACE ]
+        [0x04,0x04,0x04,0x04,0x00,0x00,0x04,0x00],  // ASCII Character [ ! ]
+        [0x0A,0x0A,0x0A,0x00,0x00,0x00,0x00,0x00],  // ASCII Character [ " ]
+        [0x0A,0x0A,0x1F,0x0A,0x1F,0x0A,0x0A,0x00],  // ASCII Character [ # ]
+        [0x04,0x0F,0x14,0x0E,0x05,0x1E,0x04,0x00],  // ASCII Character [ $ ]
+        [0x18,0x19,0x02,0x04,0x08,0x13,0x03,0x00],  // ASCII Character [ % ]
+        [0x0C,0x12,0x14,0x08,0x15,0x12,0x0D,0x00],  // ASCII Character [ & ]
+        [0x0C,0x04,0x08,0x00,0x00,0x00,0x00,0x00],  // ASCII Character [ ' ]
+        [0x02,0x04,0x08,0x08,0x08,0x04,0x02,0x00],  // ASCII Character [ ( ]
+        [0x08,0x04,0x02,0x02,0x02,0x04,0x08,0x00],  // ASCII Character [ ) ]
+        [0x00,0x04,0x15,0x0E,0x15,0x04,0x00,0x00],  // ASCII Character [ * ]
+        [0x00,0x04,0x04,0x1F,0x04,0x04,0x00,0x00],  // ASCII Character [ + ]
+        [0x00,0x00,0x00,0x00,0x0C,0x04,0x08,0x00],  // ASCII Character [ , ]
+        [0x00,0x00,0x00,0x1F,0x00,0x00,0x00,0x00],  // ASCII Character [ - ]
+        [0x00,0x00,0x00,0x00,0x00,0x0C,0x0C,0x00],  // ASCII Character [ . ]
+        [0x00,0x01,0x02,0x04,0x08,0x10,0x00,0x00],  // ASCII Character [ / ]
+        [0x0E,0x11,0x13,0x15,0x19,0x11,0x0E,0x00],  // ASCII Character [ 0 ]
+        [0x04,0x0C,0x04,0x04,0x04,0x04,0x0E,0x00],  // ASCII Character [ 1 ]
+        [0x0E,0x11,0x01,0x02,0x04,0x08,0x1F,0x00],  // ASCII Character [ 2 ]
+        [0x1F,0x02,0x04,0x02,0x01,0x11,0x0E,0x00],  // ASCII Character [ 3 ]
+        [0x02,0x06,0x0A,0x12,0x1F,0x02,0x02,0x00],  // ASCII Character [ 4 ]
+        [0x1F,0x10,0x1E,0x01,0x01,0x11,0x0E,0x00],  // ASCII Character [ 5 ]
+        [0x06,0x08,0x10,0x1E,0x11,0x11,0x0E,0x00],  // ASCII Character [ 6 ]
+        [0x1F,0x01,0x02,0x04,0x04,0x04,0x04,0x00],  // ASCII Character [ 7 ]
+        [0x1E,0x11,0x11,0x0E,0x11,0x11,0x0E,0x00],  // ASCII Character [ 8 ]
+        [0x0E,0x11,0x11,0x0F,0x01,0x02,0x0C,0x00],  // ASCII Character [ 9 ]
+        [0x00,0x0C,0x0C,0x00,0x0C,0x0C,0x00,0x00],  // ASCII Character [ : ]
+        [0x00,0x0C,0x0C,0x00,0x0C,0x04,0x08,0x00],  // ASCII Character [ ; ]
+        [0x02,0x04,0x08,0x10,0x08,0x04,0x02,0x00],  // ASCII Character [ < ]
+        [0x00,0x00,0x1F,0x00,0x1F,0x00,0x00,0x00],  // ASCII Character [ = ]
+        [0x08,0x04,0x02,0x01,0x02,0x04,0x08,0x00],  // ASCII Character [ > ]
+        [0x0E,0x11,0x01,0x02,0x04,0x00,0x04,0x00],  // ASCII Character [ ? ]
+        [0x0E,0x11,0x01,0x0D,0x15,0x15,0x0E,0x00],  // ASCII Character [ @ ]
+        [0x0E,0x11,0x11,0x11,0x1F,0x11,0x11,0x00],  // ASCII Character [ A ]
+        [0x1E,0x09,0x09,0x0E,0x09,0x09,0x1E,0x00],  // ASCII Character [ B ]
+        [0x0E,0x11,0x10,0x10,0x10,0x11,0x0E,0x00],  // ASCII Character [ C ]
+        [0x1E,0x09,0x09,0x09,0x09,0x09,0x1E,0x00],  // ASCII Character [ D ]
+        [0x1F,0x10,0x10,0x1F,0x10,0x10,0x1F,0x00],  // ASCII Character [ E ]
+        [0x1F,0x10,0x10,0x1E,0x10,0x10,0x10,0x00],  // ASCII Character [ F ]
+        [0x0E,0x11,0x10,0x13,0x11,0x11,0x0F,0x00],  // ASCII Character [ G ]
+        [0x11,0x11,0x11,0x1F,0x11,0x11,0x11,0x00],  // ASCII Character [ H ]
+        [0x0E,0x04,0x04,0x04,0x04,0x04,0x0E,0x00],  // ASCII Character [ I ]
+        [0x07,0x02,0x02,0x02,0x02,0x12,0x0C,0x00],  // ASCII Character [ J ]
+        [0x11,0x12,0x14,0x18,0x14,0x12,0x11,0x00],  // ASCII Character [ K ]
+        [0x10,0x10,0x10,0x10,0x10,0x10,0x1F,0x00],  // ASCII Character [ L ]
+        [0x11,0x1B,0x15,0x15,0x11,0x11,0x11,0x00],  // ASCII Character [ M ]
+        [0x11,0x19,0x19,0x15,0x13,0x13,0x11,0x00],  // ASCII Character [ N ]
+        [0x0E,0x11,0x11,0x11,0x11,0x11,0x0E,0x00],  // ASCII Character [ O ]
+        [0x1E,0x11,0x11,0x1E,0x10,0x10,0x10,0x00],  // ASCII Character [ P ]
+        [0x0E,0x11,0x11,0x11,0x15,0x12,0x1D,0x00],  // ASCII Character [ Q ]
+        [0x1E,0x11,0x11,0x1E,0x14,0x12,0x11,0x00],  // ASCII Character [ R ]
+        [0x0E,0x11,0x10,0x0E,0x01,0x11,0x0E,0x00],  // ASCII Character [ S ]
+        [0x1F,0x04,0x04,0x04,0x04,0x04,0x04,0x00],  // ASCII Character [ T ]
+        [0x11,0x11,0x11,0x11,0x11,0x11,0x0E,0x00],  // ASCII Character [ U ]
+        [0x11,0x11,0x11,0x11,0x11,0x0A,0x04,0x00],  // ASCII Character [ V ]
+        [0x11,0x11,0x11,0x15,0x15,0x1B,0x11,0x00],  // ASCII Character [ W ]
+        [0x11,0x11,0x0A,0x04,0x0A,0x11,0x11,0x00],  // ASCII Character [ X ]
+        [0x11,0x11,0x11,0x0A,0x04,0x04,0x04,0x00],  // ASCII Character [ Y ]
+        [0x1F,0x01,0x02,0x04,0x08,0x10,0x1F,0x00],  // ASCII Character [ Z ]
+        [0x0E,0x08,0x08,0x08,0x08,0x08,0x0E,0x00],  // ASCII Character [ [ ]
+        [0x00,0x10,0x08,0x04,0x02,0x01,0x00,0x00],  // ASCII Character [ \ ]
+        [0x0E,0x02,0x02,0x02,0x02,0x02,0x0E,0x00],  // ASCII Character [ ] ]
+        [0x04,0x0A,0x11,0x00,0x00,0x00,0x00,0x00],  // ASCII Character [ ^ ]
+        [0x00,0x00,0x00,0x00,0x00,0x00,0x1F,0x00],  // ASCII Character [ _ ]
+        [0x10,0x08,0x04,0x00,0x00,0x00,0x00,0x00],  // ASCII Character [ ` ]
+        [0x00,0x00,0x0E,0x01,0x0F,0x11,0x0F,0x00],  // ASCII Character [ a ]
+        [0x10,0x10,0x16,0x19,0x11,0x11,0x1E,0x00],  // ASCII Character [ b ]
+        [0x00,0x00,0x0E,0x11,0x10,0x11,0x0E,0x00],  // ASCII Character [ c ]
+        [0x01,0x01,0x0D,0x13,0x11,0x11,0x0F,0x00],  // ASCII Character [ d ]
+        [0x00,0x00,0x0E,0x11,0x1F,0x10,0x0E,0x00],  // ASCII Character [ e ]
+        [0x02,0x05,0x04,0x0E,0x04,0x04,0x04,0x00],  // ASCII Character [ f ]
+        [0x00,0x0D,0x13,0x13,0x0D,0x01,0x0E,0x00],  // ASCII Character [ g ]
+        [0x10,0x10,0x16,0x19,0x11,0x11,0x11,0x00],  // ASCII Character [ h ]
+        [0x04,0x00,0x0C,0x04,0x04,0x04,0x0E,0x00],  // ASCII Character [ i ]
+        [0x02,0x00,0x06,0x02,0x02,0x12,0x0C,0x00],  // ASCII Character [ j ]
+        [0x08,0x08,0x09,0x0A,0x0C,0x0A,0x09,0x00],  // ASCII Character [ k ]
+        [0x0C,0x04,0x04,0x04,0x04,0x04,0x0E,0x00],  // ASCII Character [ l ]
+        [0x00,0x00,0x1A,0x15,0x15,0x15,0x15,0x00],  // ASCII Character [ m ]
+        [0x00,0x00,0x16,0x19,0x11,0x11,0x11,0x00],  // ASCII Character [ n ]
+        [0x00,0x00,0x0E,0x11,0x11,0x11,0x0E,0x00],  // ASCII Character [ o ]
+        [0x00,0x16,0x19,0x19,0x16,0x10,0x10,0x00],  // ASCII Character [ p ]
+        [0x00,0x0D,0x13,0x13,0x0D,0x01,0x01,0x00],  // ASCII Character [ q ]
+        [0x00,0x00,0x16,0x19,0x10,0x10,0x10,0x00],  // ASCII Character [ r ]
+        [0x00,0x00,0x0F,0x10,0x1E,0x01,0x1F,0x00],  // ASCII Character [ s ]
+        [0x08,0x08,0x1C,0x08,0x08,0x09,0x06,0x00],  // ASCII Character [ t ]
+        [0x00,0x00,0x12,0x12,0x12,0x12,0x0D,0x00],  // ASCII Character [ u ]
+        [0x00,0x00,0x11,0x11,0x11,0x0A,0x04,0x00],  // ASCII Character [ v ]
+        [0x00,0x00,0x11,0x11,0x15,0x15,0x0A,0x00],  // ASCII Character [ w ]
+        [0x00,0x00,0x11,0x0A,0x04,0x0A,0x11,0x00],  // ASCII Character [ x ]
+        [0x00,0x00,0x11,0x11,0x13,0x0D,0x01,0x0E],  // ASCII Character [ y ]
+        [0x00,0x00,0x1F,0x02,0x04,0x08,0x1F,0x00],  // ASCII Character [ z ]
+        [0x02,0x04,0x04,0x08,0x04,0x04,0x02,0x00],  // ASCII Character [ { ]
+        [0x04,0x04,0x04,0x00,0x04,0x04,0x04,0x00],  // ASCII Character [ | ]
+        [0x08,0x04,0x04,0x02,0x04,0x04,0x08,0x00],  // ASCII Character [ } ]
+        [0x08,0x15,0x02,0x00,0x00,0x00,0x00,0x00]   // ASCII Character [ ~ ]
+      ];
+
+      // Data for Target 16x16 bit image.
+      var targetBits = [
+        0x7E,	0x7E,	0xC1,	0x83,	0xA1,	0x85,	0x91,	0x89,
+        0x89,	0x91,	0x85,	0xA1,	0x82,	0x41,	0x7C,	0x3E,
+        0x7C,	0x3E,	0x82,	0x41,	0x85,	0xA1,	0x89,	0x91,
+        0x91,	0x89,	0xA1,	0x85,	0xC1,	0x83,	0x7E,	0x7E
+      ];
+
+      // CSS Variable Grab of the "--pixeldefaultcolor" value to set the default background color.
+      var defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--pixeldefaultcolor').trim();
+      // CSS Variable Grab of the "--pixelcols" value to set the default screen columns.
+      var defaultCols = Number(getComputedStyle(document.documentElement).getPropertyValue('--pixelcols'));
+      // CSS Variable Grab of the "--pixelrows" value to set the default screen rows.
+      var defaultRows = Number(getComputedStyle(document.documentElement).getPropertyValue('--pixelrows'));
+
+      // Function to write text out to the Screen.
+      function TextOut(startRow, startCol, color, inwords) {
+        // Converts Carrage Return and Linefeed to ASCII 10.
+        inwords = inwords.replace(/[\n\r]/g, '\n')
+        // Converts Row and Column to correct number of Pixels Position.
+        var tmpRow = (startRow * 8) - 7;
+        var tmpCol = (startCol * 8) - 7;
+        // Read text input and converts each character to 8bit format.
+        for(var wc = 0;wc < inwords.length; wc++) {
+          // Wraps Current Column or Row to first pixel if defaul is exceeded.
+          if(tmpCol > (defaultCols * 8)) {tmpCol = 1;tmpRow += 8;
+            if(tmpRow > (defaultRows * 8)) {tmpRow = 1;}
+          }
+          // Checks for ASCII 10, clears to End of Line and increments a Row.
+          if(inwords.charCodeAt(wc) == 10) {
+            ClearPixelLine(tmpRow, tmpCol);
+            tmpCol = 1;tmpRow += 8;
+          } else {
+            // If not ASCII 10 converts letter to 8bit format.
+            var tmpCharValue = inwords.charCodeAt(wc)-32;
+            for(var val = 0;val < 8; val++) {
+              // Converts to 8bit Binary with Leading Zeros.
+              var bitmap = BinaryOut(ascii[tmpCharValue][val]);
+              // Processes each Bit for On or Off.
+              for(var bit = 0;bit < 8; bit++) {
+                if(bitmap.charAt(bit) == 1) {
+                  // If Bit is '1' Modify Pixel Background Color.
+                  Pixel(tmpRow + val, tmpCol + bit, color);
+                } else {
+                  // If Bit is '0' Modify Pixel to default Background Color.
+                  Pixel(tmpRow + val, tmpCol + bit, defaultColor);
+                }
+              }
+            }
+            // Add 8bit Pixel size to move one Column to the Right.
+            tmpCol += 8;
+          }
+        }
+      }
+
+      // Sets all Pixels to the end of the Row to default Background Color.
+      function ClearPixelLine(pixelRow, pixelColStart) {
+        for(var rl = pixelRow;rl < (pixelRow + 8) ; rl++) {
+          for(var cl = pixelColStart;cl < (defaultCols * 8) ; cl++) {
+            Pixel(rl, cl, defaultColor);
+          }
+        }
+      }
+
+      // Converts Binary data to 8bit with Leading Zeros.
+      function BinaryOut(number) {
+        return "00000000".substr((number.toString(2)).length) + number.toString(2);
+      }
+
+      // Function that modifies '--pixelrepeat' CSS Variable.
+      function SetCSSVaribles(cols) {
+        let root = document.documentElement;
+        root.style.setProperty('--pixelrepeat', cols);
+      }
+
+      // Modifies a Pixel Row and Column to the given Color.
+      function Pixel(row, col, color) {
+        let root = document.getElementById("PX" + row + "-" + col);
+        root.style.backgroundColor = color;
+      }
+
+      // Creates the Pixel Screen using SPAN tag with unique ID's.
+      function CreateDisplay() {
+        var tmpRows = (defaultRows * 8);
+        var tmpCols = (defaultCols * 8);
+        SetCSSVaribles(tmpCols);
+        var outPixels = "";
+        for(var r = 0; r < tmpRows;r++) {
+          for(var c = 0; c < tmpCols;c++) {
+            outID = " id=\"PX" + (r + 1) + "-" + (c + 1) + "\"";
+            outPixels += "<span class=\"pixels\""+outID+">&nbsp;</span>";
+          }
+        }
+        // Writes out the Screen Pixels.
+        document.getElementById("PixelsOut").innerHTML = outPixels;
+      }
+
+      // Resets the complete Screen to the default Background Color.
+      function ResetDisplay() {
+        var tmpRows = (defaultRows * 8);
+        var tmpCols = (defaultCols * 8);
+        for(var r = 0; r < tmpRows;r++) {
+          for(var c = 0; c < tmpCols;c++) {
+            Pixel((r + 1),(c + 1),defaultColor);
+          }
+        }
+      }
+
+      // Randomly places a 16x16 bit Heart on the screen.
+      function Targets(color) {
+        // Generate a random Row and Column, Convert to Pixels and Modify Position.
+        var rndColPixel = ((Math.floor(Math.random() * (defaultCols - 2)) + 1) * 8) - 7;
+        var rndRowPixel = ((Math.floor(Math.random() * (defaultRows - 3)) + 1) * 8) - 7;
+        for(var row = 0;row < targetBits.length; row += 2) {
+          var bitmap = BinaryOut(targetBits[row]) + BinaryOut(targetBits[row + 1]);
+          // Processes each Bit for On or Off.
+          for(var bit = 0;bit < bitmap.length; bit++) {
+            if(bitmap.charAt(bit) == 1) {
+              // If Bit is '1' Modify Pixel Background Color.
+              Pixel(rndRowPixel + row, rndColPixel + bit, color);
+            } else {
+              // If Bit is '0' Modify Pixel to default Background Color.
+              Pixel(rndRowPixel + row, rndColPixel + bit, defaultColor);
+            }
+          }
+        }
+      }
+
+      // Sends data stored in the TEXTAREA to the Pixel Screen.
+      function WriteText(row,col,color) {
+        var textInfo = document.getElementById("TableInfo").value;
+        TextOut(1, 1, color, textInfo);
+      }
+
+    </script>
+  </head>
+  <body>
+    <center>
+      <div class="container">
+        <div class="PixelsOut" id="PixelsOut"></div>
+        <div class="form"><br>
+          <textarea name="TableInfo" id="TableInfo" value="" rows="16" cols="78">
+12345678901234567890123456789012345678901234567890123456789012345678901234567890
+
+            ,---,_          ,
+             _>   `'-.  .--'/
+        .--'` ._      `/   <_
+         >,-' ._'.. ..__ . ' '-.
+      .-'   .'`         `'.     '.
+       >   / >`-.     .-'< \ , '._\
+      /    ; '-._>   <_.-' ;  '._>
+      `>  ,/  /___\ /___\  \_  /
+      `.-|(|  \o_/  \o_/   |)|`
+    jgs   \;        \      ;/
+            \  .-,   )-.  /
+             /`  .'-'.  `\
+            ;_.-`.___.'-.;
+
+
+  Imagination is more important than
+   knowledge. Knowledge is limited.
+   Imagination encircles the world.
+          </textarea><br><br>
+          Color: <input type="text" id="inColor" size="6" value="#666">
+          <input type="button" onclick="WriteText(1, 1, document.getElementById('inColor').value)" value="Write Pixels">
+          <input type="button" onclick="Targets(document.getElementById('inColor').value)" value="Target Pixels">
+          <input type="button" onclick="ResetDisplay()" value="Reset Pixels">
+        </div>
+      </div>
+    </center>
+    <script>
+      window.onload=CreateDisplay();
+    </script>
+  </body>
+</html>
